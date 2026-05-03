@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control | MiZona Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="module" src="main.js" defer></script>
+    <style>
+        /* === DASHBOARD MODERNO - MIZONA PRO === */
+        :root {
+            --bg-main: #f8fafc;
+            --sidebar-bg: #1e293b;
+            --sidebar-active: #334155;
+            --white: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #1e40af;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* === LAYOUT PRINCIPAL === */
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* === SIDEBAR MODERNO === */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #111827 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            transform: translateY(-1px);
+        }
+
+        /* === CONTENIDO PRINCIPAL === */
+        .dashboard-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem;
+            width: calc(100vw - 280px);
+            overflow-y: auto;
+        }
+
+        /* === HEADER DASHBOARD === */
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dash-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        /* === SECCIONES === */
+        .content-section {
+            display: none;
+            animation: slideIn 0.4s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* === ESTADÍSTICAS === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .change-up { color: var(--success); }
+        .change-down { color: var(--danger); }
+
+        /* === GRÁFICO === */
+        .chart-container {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-wrapper {
+            height: 400px;
+            position: relative;
+        }
+
+        /* === PRODUCTOS === */
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .product-stock {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .stock-ok { color: var(--success); }
+        .stock-low { color: var(--warning); }
+        .stock-out { color: var(--danger); }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-edit { background: var(--primary); color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+        .btn-action:hover { transform: scale(1.05); }
+
+        /* === MODAL PRODUCTOS === */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--white);
+            margin: 5% auto;
+            padding: 2.5rem;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(-50px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .close:hover {
+            color: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .image-upload {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+            margin-bottom: 1.5rem;
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .image-upload.dragover {
+            border-color: var(--primary);
+            background: #dbeafe;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--primary), #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* === MENSAJES === */
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .message-sender {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .message-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .message-text {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* === CONFIGURACIÓN === */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .setting-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .dashboard-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3 id="businessName">MiZona Pro</h3>
+                <p id="businessCity" style="opacity: 0.8; font-size: 0.9rem;">Cochabamba</p>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item active" data-section="stats">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Estadísticas</span>
+                </li>
+                <li class="nav-item" data-section="products">
+                    <i class="fas fa-box"></i>
+                    <span>Productos</span>
+                </li>
+                <li class="nav-item" data-section="messages">
+                    <i class="fas fa-comments"></i>
+                    <span>Mensajes</span>
+                </li>
+                <li class="nav-item" data-section="orders">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pedidos</span>
+                </li>
+                <li class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configuración</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">JD</div>
+                    <div>
+                        <div id="userName" style="font-weight: 600;">Juan Doe</div>
+                        <div id="userWhatsApp" style="font-size: 0.8rem; opacity: 0.8;">+591 70000000</div>
+                    </div>
+                </div>
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="dashboard-content">
+            <!-- HEADER -->
+            <header class="dash-header">
+                <div>
+                    <h1 id="pageTitle">Estadísticas Generales</h1>
+                    <p id="pageSubtitle" style="color: var(--text-muted); margin-top: 0.25rem;">Resumen de tu negocio hoy</p>
+                </div>
+                <div class="welcome-user">
+                    <div class="user-avatar" id="headerAvatar">JD</div>
+                    <span style="font-weight: 600;" id="headerUserName">Juan Doe</span>
+                </div>
+            </header>
+
+            <!-- ESTADÍSTICAS -->
+            <section id="stats" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-eye stat-icon" style="color: var(--primary);"></i>
+                        <div class="stat-label">Visitas Hoy</div>
+                        <div class="stat-value" id="visitsToday">1,247</div>
+                        <div class="stat-change change-up"><i class="fas fa-arrow-up"></i> +23%</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-shopping-bag stat-icon" style="color: var(--success);"></i>
+                        <div class="stat-label">Pedidos Hoy</div>
+                        <div class="stat-value" id="ordersToday">28</div>
+                        <div class="stat-change change-up"><i class="fas fa-arrow-up"></i> +15%</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-box stat-icon" style="color: var(--warning);"></i>
+                        <div class="stat-label">Productos Activos</div>
+                        <div class="stat-value" id="productsCount">12</div>
+                        <div class="stat-change change-up"><i class="fas fa-arrow-up"></i> +2</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line stat-icon" style="color: var(--accent);"></i>
+                        <div class="stat-label">Ingresos Mes</div>
+                        <div class="stat-value" id="monthlyRevenue">Bs 4,850</div>
+                        <div class="stat-change change-up"><i class="fas fa-arrow-up"></i> +34%</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 700;">Ventas de la Semana</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRODUCTOS -->
+            <section id="products" class="content-section">
+                <div class="products-header">
+                    <h2><i class="fas fa-box"></i> Mis Productos</h2>
+                    <button class="btn-primary" onclick="showAddProductModal()">
+                        <i class="fas fa-plus"></i> Nuevo Producto
+                    </button>
+                </div>
+                <div class="products-grid" id="productsGrid">
+                    <!-- Productos se cargan aquí -->
+                </div>
+            </section>
+
+            <!-- MENSAJES -->
+            <section id="messages" class="content-section">
+                <div class="products-header">
+                    <h2><i class="fas fa-comments"></i> Mensajes Recientes</h2>
+                </div>
+                <div class="messages-list" id="messagesList">
+                    <!-- Mensajes simulados -->
+                </div>
+            </section>
+
+            <!-- PEDIDOS -->
+            <section id="orders" class="content-section">
+                <div class="products-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Pedidos Recientes</h2>
+                </div>
+                <div class="messages-list" id="ordersList">
+                    <!-- Pedidos simulados -->
+                </div>
+            </section>
+
+            <!-- CONFIGURACIÓN -->
+            <section id="settings" class="content-section">
+                <div class="products-header">
+                    <h2><i class="fas fa-cog"></i> Configuración del Negocio</h2>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Información Principal</h3>
+                        <div class="form-group">
+                            <label>Nombre del Negocio</label>
+                            <input type="text" value="Panadería Don Julio" id="businessNameInput">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp</label>
+                            <input type="tel" value="+591 70000000" id="whatsappInput">
+                        </div>
+                    </div>
+                    <div class="setting-card">
+                        <h3>Horarios</h3>
+                        <div class="form-group">
+                            <label>Lunes a Viernes</label>
+                            <input type="text" value="6:00 AM - 8:00 PM">
+                        </div>
+                        <div class="form-group">
+                            <label>Sábados</label>
+                            <input type="text" value="7:00 AM - 3:00 PM">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="margin-top: 2rem; max-width: 300px;">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL PRODUCTOS -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Producto</h2>
+                <span class="close" onclick="closeProductModal()">&times;</span>
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label>Nombre del Producto *</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio (Bs) *</label>
+                    <input type="number" id="productPrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Stock Disponible *</label>
+                    <input type="number" id="productStock" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="productDesc" rows="3" placeholder="Describe tu producto..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Foto del Producto *</label>
+                    <div class="image-upload" id="imageUpload">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <p>Arrastra tu imagen aquí o haz clic para seleccionar</p>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">JPG, PNG (máx 5MB)</p>
+                        <input type="file" id="productImage" accept="image/*" style="display: none;">
+                        <img id="imagePreview" class="image-preview" style="display: none;">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Publicar Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript inline para demo rápida
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            setupImageUpload();
+            loadDemoData();
+        });
+
+        function initDashboard() {
+            // Sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.dataset.section;
+                    showSection(section, this);
+                });
+            });
+
+            // Chart demo
+            initChart();
+        }
+
+        function showSection(sectionId, navElement) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(sectionId).classList.add('active');
+            navElement.classList.add('active');
+
+            // Update header
+            const titles = {
+                stats: { title: 'Estadísticas Generales', subtitle: 'Resumen de tu negocio hoy' },
+                products: { title: 'Mis Productos', subtitle: 'Gestiona tu catálogo' },
+                messages: { title: 'Mensajes Recientes', subtitle: 'Conversaciones con clientes' },
+                orders: { title: 'Pedidos Recientes', subtitle: 'Gestiona tus ventas' },
+                settings: { title: 'Configuración', subtitle: 'Personaliza tu negocio' }
+            };
+
+            document.getElementById('pageTitle').textContent = titles[sectionId].title;
+            document.getElementById('pageSubtitle').textContent = titles[sectionId].subtitle;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('salesChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                        datasets: [{
+                            label: 'Ventas',
+                            data: [120, 190, 300, 250, 400, 380, 520],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        function setupImageUpload() {
+            const uploadArea = document.getElementById('imageUpload');
+            const fileInput = document.getElementById('productImage');
+            const preview = document.getElementById('imagePreview');
+
+            // Click to upload
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // Drag & drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+            });
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            function handleFiles(files) {
+                const file = files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        function showAddProductModal() {
+            document.getElementById('productModal').style.display = 'block';
+            document.getElementById('modalTitle').textContent = 'Agregar Producto';
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+            document.getElementById('productForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Aquí iría la lógica de Supabase
+            alert('✅ ¡Producto publicado exitosamente!');
+            closeProductModal();
+        });
+
+        function loadDemoData() {
+            // Demo productos
+            const demoProducts = [
+                { id: 1, name: 'Marraqueta Tradicional', price: 0.50, stock: 200, image: 'https://images.unsplash.com/photo-1597733336794-12d05021d510?w=400' },
+                { id: 2, name: 'Pan de Leche', price: 1.00, stock: 45, image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400' },
+                { id: 3, name: 'Cuñapé Especial', price: 2.00, stock: 8, image: 'https://images.unsplash.com/photo-1621849400072-f554417f7051?w=400' }
+            ];
+
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = demoProducts.map(product => `
+                <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-name">${product.name}</h3>
+                        <div class="product-price">Bs ${product.price}</div>
+                        <div class="product-stock">
+                            <i class="fas fa-box"></i>
+                            <span class="${product.stock > 20 ? 'stock-ok' : product.stock > 5 ? 'stock-low' : 'stock-out'}">
+                                ${product.stock} disponibles
+                            </span>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn-action btn-edit" onclick="editProduct(${product.id})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-action btn-delete" onclick="deleteProduct(${product.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Demo mensajes
+            document.getElementById('messagesList').innerHTML = `
+                <div class="message-card">
+                    <div class="message-header">
+                        <div class="message-sender">María G.</div>
+                        <div class="message-time">Hace 2h</div>
+                    </div>
+                    <p class="message-text">Hola, ¿tienen marraquetas para entrega hoy a las 7pm? Serían 20 unidades.</p>
+                </div>
+                <div class="message-card">
+                    <div class="message-header">
+                        <div class="message-sender">Carlos R.</div>
+                        <div class="message-time">Ayer</div>
+                    </div>
+                    <p class="message-text">Gracias por el pedido de ayer, excelente calidad! Volveré a pedir.</p>
+                </div>
+            `;
+        }
+
+        function editProduct(id) {
+            alert(`Editar producto ID: ${id}`);
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Eliminar este producto?')) {
+                alert(`Producto ${id} eliminado`);
+            }
+        }
+
+        function logout() {
+            if (confirm('¿Cerrar sesión?')) {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

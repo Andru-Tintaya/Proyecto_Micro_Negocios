@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiZona | Marketplace de Talentos Locales - Bolivia</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="main.js" defer></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo" onclick="location.href='index.html'">MiZona</div>
+        <div class="nav-menu">
+            <a href="#hero">Inicio</a>
+            <a href="#categorias">Categorías</a>
+            <a href="#negocios">Negocios</a>
+            <a href="#testimonios">Testimonios</a>
+            <a href="#contacto">Contacto</a>
+            <a href="register.html" class="btn-register">Regístrate Gratis</a>
+            <a href="login.html" class="btn-login">Mi Panel</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1>Encuentra el <strong>mejor talento</strong> de tu ciudad</h1>
+            <p>Conectamos emprendedores locales con clientes que valoran la calidad, confianza y precios justos. Sin comisiones, sin intermediarios.</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Busca panadería, carpintería, mecánico, peluquería...">
+                <button onclick="searchBusinesses()"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+            <div style="margin-top: 2rem; font-size: 1.1rem; opacity: 0.9;">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                Más de <strong id="businessCount">124</strong> negocios locales activos
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORÍAS -->
+    <section id="categorias" class="section">
+        <div class="container">
+            <h2 class="section-title">Explora por Categoría</h2>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <i class="fas fa-bread-slice category-icon">🍞</i>
+                    <h3>Gastronomía</h3>
+                    <p>Panaderías, empanadas, api, salteñas</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-hammer category-icon">🔨</i>
+                    <h3>Construcción</h3>
+                    <p>Carpinteros, electricistas, plomeros</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-cut category-icon">✂️</i>
+                    <h3>Belleza</h3>
+                    <p>Peluquerías, estéticas, manicure</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-car category-icon">🚗</i>
+                    <h3>Automotriz</h3>
+                    <p>Mecánicos, lavado, repuestos</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-laptop category-icon">💻</i>
+                    <h3>Tecnología</h3>
+                    <p>Reparaciones, celulares, redes</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-tshirt category-icon">👗</i>
+                    <h3>Moda</h3>
+                    <p>Confecciones, sastrería, accesorios</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEGOCIOS DESTACADOS -->
+    <section id="negocios" class="section" style="background: var(--bg-main);">
+        <div class="container">
+            <h2 class="section-title">Negocios Más Populares</h2>
+            <div class="business-grid" id="businessGrid">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                    <p>Cargando los mejores negocios de tu zona...</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="#categorias" class="btn-view" style="font-size: 1.1rem; padding: 1rem 2.5rem;">
+                    Ver Más Negocios <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIOS -->
+    <section id="testimonios" class="section testimonials">
+        <div class="container">
+            <h2 class="section-title">Lo que dicen nuestros emprendedores</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Desde que estoy en MiZona, mis ventas se triplicaron. Los clientes me contactan directo por WhatsApp y ya no dependo de recomendaciones."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">DJ</div>
+                        <div class="author-info">
+                            <h4>Don Julio - Panadería</h4>
+                            <p>Cochabamba ⭐⭐⭐⭐⭐</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Como carpintero, MiZona me abrió puertas increíbles. Recibo pedidos de toda la ciudad sin pagar comisiones."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">MR</div>
+                        <div class="author-info">
+                            <h4>María Rojas</h4>
+                            <p>La Paz ⭐⭐⭐⭐⭐</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Mi taller de mecánica está lleno de trabajo. La gente confía porque ve reseñas reales y fotos auténticas."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">TG</div>
+                        <div class="author-info">
+                            <h4>Taller Guerrero</h4>
+                            <p>Santa Cruz ⭐⭐⭐⭐⭐</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INFO & CONTACTO -->
+    <section id="contacto" class="section info-section">
+        <div class="container">
+            <div class="info-grid">
+                <div class="info-text">
+                    <h2>¿Por qué 2,500+ emprendedores eligen MiZona?</h2>
+                    <ul class="benefit-list">
+                        <li><i class="fas fa-infinity"></i> Sin comisiones ni costos ocultos</li>
+                        <li><i class="fab fa-whatsapp"></i> Contacto directo con clientes</li>
+                        <li><i class="fas fa-users"></i> Soporte a economía local</li>
+                        <li><i class="fas fa-mobile-alt"></i> Totalmente responsive móvil</li>
+                        <li><i class="fas fa-shield-alt"></i> Verificación de emprendedores</li>
+                    </ul>
+                    <div style="margin-top: 2rem;">
+                        <a href="register.html" class="btn-register" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                            <i class="fas fa-user-plus"></i> Únete Gratis Ahora
+                        </a>
+                    </div>
+                </div>
+                <div class="contact-card">
+                    <h3><i class="fas fa-headset"></i> ¿Necesitas ayuda?</h3>
+                    <p>Estamos aquí para apoyarte en tu emprendimiento.</p>
+                    <div class="contact-links">
+                        <p><i class="fas fa-envelope"></i> hola@mizona.bo</p>
+                        <p><i class="fas fa-phone"></i> +591 700 123 456</p>
+                        <p><i class="fas fa-map-marker-alt"></i> Santa Cruz de la Sierra</p>
+                        <p><i class="fab fa-whatsapp"></i> Chatea ahora</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>MiZona</h3>
+                    <p>Digitalizando el talento boliviano. Conectamos emprendedores con clientes locales de forma directa y transparente.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Para Clientes</h4>
+                    <ul>
+                        <li><a href="#">Cómo funciona</a></li>
+                        <li><a href="#">Ciudades cubiertas</a></li>
+                        <li><a href="#">Términos de uso</a></li>
+                        <li><a href="#">Privacidad</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Para Emprendedores</h4>
+                    <ul>
+                        <li><a href="register.html">Regístrate gratis</a></li>
+                        <li><a href="login.html">Mi panel</a></li>
+                        <li><a href="#">Subir productos</a></li>
+                        <li><a href="#">Guía rápida</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Ciudades</h4>
+                    <ul>
+                        <li><a href="#">Santa Cruz (247)</a></li>
+                        <li><a href="#">La Paz (189)</a></li>
+                        <li><a href="#">Cochabamba (156)</a></li>
+                        <li><a href="#">El Alto (98)</a></li>
+                        <li><a href="#">Tarija (45)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 MiZona Bolivia. Todos los derechos reservados. | Diseñado con ❤️ para emprendedores bolivianos.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
