@@ -351,41 +351,6 @@ async function handleLogin(e) {
     }
 }
 
-// === PRODUCTOS ===
-async function handleAddProduct(e) {
-    e.preventDefault();
-    
-    try {
-        const fileInput = document.getElementById('productImage');
-        const imageFile = fileInput.files[0];
-        
-        const productData = {
-            business_id: userBusiness.id,  // ✅ ID sincronizado
-            name: document.getElementById('productName').value,
-            price: parseFloat(document.getElementById('productPrice').value),
-            stock: parseInt(document.getElementById('productStock').value),
-            description: document.getElementById('productDesc').value || ''
-        };
-        
-        // Subir imagen si existe
-        if (imageFile) {
-            productData.image_url = await uploadProductImage(imageFile);
-        }
-        
-        const { error } = await supabase
-            .from('products')
-            .insert([productData]);
-        
-        if (error) throw error;
-        
-        alert('✅ Producto creado exitosamente');
-        closeProductModal();
-        await loadUserProducts();
-    } catch (error) {
-        alert('❌ Error al crear producto: ' + error.message);
-    }
-}
-
 async function uploadProductImage(file) {
     try {
         const fileExt = file.name.split('.').pop();
